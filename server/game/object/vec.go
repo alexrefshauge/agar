@@ -18,3 +18,44 @@ func (p *Vec) DistanceToPoint(other *Vec) float32 {
 	sum := math.Pow(dx, 2) + math.Pow(dy, 2)
 	return float32(math.Sqrt(sum))
 }
+
+func (v *Vec) Len() float32 {
+	return float32(math.Sqrt(math.Pow(float64(v.X), 2) + math.Pow(float64(v.Y), 2)))
+}
+
+func (v *Vec) Add(other *Vec) *Vec {
+	return &Vec{
+		X: v.X + other.X,
+		Y: v.Y + other.Y,
+	}
+}
+
+func (v *Vec) Mul(other *Vec) *Vec {
+	return &Vec{
+		X: v.X * other.X,
+		Y: v.Y * other.Y,
+	}
+}
+
+func (v *Vec) Scale(s float32) *Vec {
+	return &Vec{
+		X: v.X * s,
+		Y: v.Y * s,
+	}
+}
+
+// Div divides the numerator (self) by the denominator (other vector)
+func (num *Vec) Div(den *Vec) *Vec {
+	return &Vec{
+		X: num.X / den.X,
+		Y: num.Y / den.Y,
+	}
+}
+
+func (v *Vec) Norm() *Vec {
+	mag := v.Len()
+	return &Vec{
+		X: v.X / mag,
+		Y: v.Y / mag,
+	}
+}

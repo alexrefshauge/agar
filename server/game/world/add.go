@@ -7,8 +7,8 @@ import (
 	o "github.com/alexrefshauge/agar/server/game/object"
 )
 
-const PLAYER_START_SIZE = 10
-const BLOB_START_SIZE = 1
+const PLAYER_START_SIZE = 100
+const BLOB_START_SIZE = 10
 
 func (w *World) AddBlob(x, y float32) *o.Blob {
 	blob := &o.Blob{

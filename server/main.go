@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/alexrefshauge/agar/server/game"
 	"github.com/alexrefshauge/agar/server/game/world"
@@ -17,11 +18,11 @@ func init() {
 }
 
 func main() {
+	slog.SetLogLoggerLevel(slog.LevelDebug)
 	address := fmt.Sprintf("%s:%d", HOST, PORT)
 	fmt.Printf("starting server on %s\n", address)
 
 	g := game.NewGameWithWorld(*gameWorld)
-	go g.Run()
-
-	g.Listen(address)
+	go g.Listen(address)
+	g.Run()
 }

@@ -1,8 +1,10 @@
 package object
 
-import "math"
+import (
+	"math"
+)
 
-var speed float32 = 20
+var speed float32 = 100
 
 func (p *Player) Update(deltaTime float64) bool {
 	dt := float32(deltaTime)

@@ -37,3 +37,7 @@ func TestDistance(t *testing.T) {
 	expected = 1
 	assert.Greater(t, actual, expected)
 }
+
+func TestNorm(t *testing.T) {
+
+}

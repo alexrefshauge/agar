@@ -1,53 +1,48 @@
 package game
 
 import (
-	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net"
-	"time"
 )
 
 func (g *Game) Run() {
-	go g.runBroadcastLoop()
 	for {
+		//slog.Debug("starting new tick")
+		g.newTick()
+		//slog.Debug(fmt.Sprintf("new tick at %s\n", g.tickStart.String()))
+
+		//slog.Debug("handling client queue")
+		g.handleClientQueue()
+
+		//slog.Debug("running next world step")
 		g.world.Step()
-		time.Sleep(500)
+
+		//slog.Debug("broadcasting updates to clients")
+		g.broadcastUpdates()
+
+		//slog.Debug("ending tick")
+		g.waitTick()
 	}
 }
 
-func (g *Game) Listen(address string) {
-	listener, err := net.Listen("tcp4", address)
-	if err != nil {
-		panic("failed to open server socket")
-	}
+func (g *Game) handleClientQueue() {
+	for i := 0; i < len(g.clientQueue); i++ {
+		conn := <-g.clientQueue
+		id := g.addClient(conn)
+		slog.Debug("new client", "object id", id)
 
-	for {
-		conn, err := listener.Accept()
+		packet := fmt.Appendf([]byte{}, "%d;%f\r\n", id, g.world.Size)
+		_, err := conn.Write(packet)
 		if err != nil {
-			panic("failed to accept client socket")
-		}
-		id := g.AddClient(conn)
-
-		packet := fmt.Appendf([]byte{}, "%d\r\n", id)
-
-		w := g.world
-		worldData, err := json.Marshal(w)
-		packet = append(packet, worldData...)
-		packet = append(packet, PACKET_STOP...)
-		if err != nil {
-			g.RemoveClient(id)
-			continue
-		}
-		_, err = conn.Write(packet)
-		if err != nil {
-			g.RemoveClient(id)
-			fmt.Printf("Failed to add client %d\n", id)
+			g.removeClient(id)
+			slog.Error("Failed to add client", "client id", id)
 			continue
 		}
 	}
 }
 
-func (g *Game) AddClient(conn net.Conn) int {
+func (g *Game) addClient(conn net.Conn) int {
 	p := g.world.AddPlayer()
 	id := p.GetId()
 	g.clients[id] = conn
@@ -55,10 +50,10 @@ func (g *Game) AddClient(conn net.Conn) int {
 	return id
 }
 
-func (g *Game) RemoveClient(id int) {
+func (g *Game) removeClient(id int) {
 	client, ok := g.clients[id]
 	if !ok {
-		fmt.Printf("Failed to remove client. Client %d does not exist\n", id)
+		slog.Error("Failed to remove client. Client does not exist", "client id", id)
 		return
 	}
 

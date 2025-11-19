@@ -14,7 +14,7 @@ type World struct {
 
 	Size float32 `json:"size"` // radius of the world border
 
-	updates chan int
+	Updates chan int
 }
 
 func NewWorld() *World {
