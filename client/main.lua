@@ -1,6 +1,6 @@
 local camera = require "camera"
 local client = require "client"
-local address, port = "localhost", 42069
+local address, port = "130.225.37.50", 42069
 local clientId = -1
 local world
 
