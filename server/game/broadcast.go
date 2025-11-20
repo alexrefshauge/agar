@@ -14,6 +14,7 @@ type updateJson struct {
 	Players []*object.Player `json:"players"`
 	Blobs   []*object.Blob   `json:"blobs"`
 	Unload  []int            `json:"unload"`
+	Eat     []int            `json:"eat"`
 }
 
 func (g *Game) broadcastUpdates() {
@@ -42,6 +43,11 @@ func (g *Game) broadcastUpdates() {
 			Players: iPlayers,
 			Blobs:   iBlobs,
 			Unload:  g.updatePlayerClientInterests(id),
+			Eat:     g.world.JustEaten,
+		}
+
+		if len(updatePacket.Eat) > 0 {
+			slog.Debug("blobs eaten", "count", len(updatePacket.Eat))
 		}
 
 		// packet with all data

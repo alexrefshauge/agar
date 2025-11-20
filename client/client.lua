@@ -3,8 +3,9 @@ local json = require "json"
 
 local M = {
 	connected = false,
-	client = socket.tcp(),
+	client = socket.tcp4(),
 	id = -1,
+	partial = ""
 }
 
 
@@ -45,14 +46,20 @@ function M:updateWorld(world)
 		return world
 	end
 
-	local data, err = self.client:receive("*l")
+	local data, err, part = self.client:receive("*l")
 	if err and not err == "timeout" then
 		print(err)
 		return world
 	end
 
 	if data then
+		data = self.partial .. data
+		self.partial = ""
 		world:update(json.decode(data))
+	end
+
+	if part then
+		self.partial = self.partial .. part
 	end
 
 	return world
@@ -71,7 +78,7 @@ function M:sendInput()
 
 	if math.abs(lastDirection - direction) > 0.01 then
 		-- client:send(tostring(direction))
-		local _, err = self.client:send(tostring(direction))
+		local _, err = self.client:send(tostring(direction) .. "\n")
 		print(tostring(direction))
 		if err then
 			print("failed to send direction: " .. err)

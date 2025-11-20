@@ -1,7 +1,11 @@
 package game
 
 import (
+	"bufio"
+	"errors"
 	"fmt"
+	"io"
+	"log/slog"
 	"net"
 	"strconv"
 
@@ -11,19 +15,26 @@ import (
 func (g *Game) handleClient(id int, conn net.Conn) {
 	defer conn.Close()
 
-	buffer := make([]byte, 4096)
+	reader := bufio.NewReader(conn)
+	partial := ""
 
 	for {
-		n, err := conn.Read(buffer)
+		data, prefix, err := reader.ReadLine()
 		if err != nil {
-			fmt.Printf("Failed to receive packet: %s\n", err)
-			return
+			if errors.Is(err, io.EOF) {
+				slog.Warn("reading from closed socket", "client", id)
+				break
+			}
+			slog.Error("failed to read from socket", "error", err)
 		}
-		packet := buffer[:n]
-		fmt.Printf("received %s from client %d\n", string(packet), id)
+		if prefix {
+			partial = fmt.Sprintf("%s%s", partial, data)
+			continue
+		}
+		packet := fmt.Sprintf("%s%s", partial, data)
+		partial = ""
 
 		direction, err := strconv.ParseFloat(string(packet), 64)
-		fmt.Println(direction)
 		o, ok := g.world.IdMap[id]
 		if !ok {
 			//TODO: handle gracefully

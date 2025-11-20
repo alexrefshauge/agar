@@ -1,4 +1,3 @@
-local json = require "json"
 M = {
 	size = 100,
 	players = {},
@@ -6,11 +5,19 @@ M = {
 	objects = {}
 }
 
+local debug = _G.debug
 function M:update(data)
 	self.size = data.size or self.size
 	local unloadIds = {}
+	local eatIds = data.eat or {}
+
 	for _, id in ipairs(unloadIds) do
 		print("- unloading game object: " .. id)
+		table.remove(self.objects, id)
+	end
+
+	for _, id in ipairs(eatIds) do
+		print(id .. " has been eaten!")
 		table.remove(self.objects, id)
 	end
 
@@ -18,14 +25,18 @@ function M:update(data)
 	-- load players
 	for _, o in ipairs(data.players or {}) do
 		if self.objects[o.id] then -- update object
-			print("= updating game object [player]: " .. o.id)
+			if debug then
+				print("= updating game object [player]: " .. o.id)
+			end
 			self.objects[o.id].pos = o.pos
 			self.objects[o.id].dir = o.dir
 			self.objects[o.id].vel = o.vel
 			self.objects[o.id].name = o.name
 			self.objects[o.id].size = o.size
 		else -- load as new object
-			print("+ loading game object [player]: " .. o.id)
+			if debug then
+				print("+ loading game object [player]: " .. o.id)
+			end
 			self.objects[o.id] = o
 			self.objects[o.id].type = "player"
 			count = count + 1
@@ -35,11 +46,15 @@ function M:update(data)
 	-- load blobs
 	for _, o in ipairs(data.blobs or {}) do
 		if self.objects[o.id] then -- update object
-			print("= updating game object [blob]: " .. o.id)
+			if debug then
+				print("= updating game object [blob]: " .. o.id)
+			end
 			self.objects[o.id].pos = o.pos
 			self.objects[o.id].size = o.size
 		else -- load as new object
-			print("+ loading game object [blob]: " .. o.id)
+			if debug then
+				print("+ loading game object [blob]: " .. o.id)
+			end
 			self.objects[o.id] = o
 			self.objects[o.id].type = "blob"
 			count = count + 1
@@ -47,7 +62,7 @@ function M:update(data)
 	end
 
 
-	print(tostring(count) .. " objects loaded")
+	-- print(tostring(count) .. " objects loaded")
 end
 
 function M:step(dt)

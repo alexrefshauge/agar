@@ -1,8 +1,11 @@
 local camera = require "camera"
 local client = require "client"
 local address, port = "130.225.37.50", 42069
+address = "localhost"
 local clientId = -1
 local world
+
+_G.debug = false
 
 
 function love.load()
