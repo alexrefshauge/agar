@@ -9,6 +9,8 @@ type GameObject interface {
 	// dt (delta time) is the time in seconds, since the last update were made.
 	// BUG(alex): delta time is curruently calculated using the time since the beginning of the last world update. This should be corrected to the time since individual game objects were updated.
 	Update(dt float64) bool
+
+	GetPos() Vec
 }
 
 type BaseGameObject struct {
@@ -18,6 +20,9 @@ type BaseGameObject struct {
 
 func (o *BaseGameObject) GetId() int {
 	return o.Id
+}
+func (o *BaseGameObject) GetPos() Vec {
+	return o.Position
 }
 
 type Player struct {

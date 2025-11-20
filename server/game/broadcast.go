@@ -13,6 +13,7 @@ import (
 type updateJson struct {
 	Players []*object.Player `json:"players"`
 	Blobs   []*object.Blob   `json:"blobs"`
+	Unload  []int            `json:"unload"`
 }
 
 func (g *Game) broadcastUpdates() {
@@ -34,15 +35,23 @@ func (g *Game) broadcastUpdates() {
 		slog.Debug("no world updates", "tick start", g.tickStart)
 		return
 	}
-	// packet with all data
-	data, err := json.Marshal(updateJson{Players: players, Blobs: blobs})
-	packet := make([]byte, PACKET_METADATA_SIZE+len(data))
-	copy(packet[0:len(data)], data)
-	copy(packet[len(data):], PACKET_STOP)
 
 	for id, client := range clients {
-		fmt.Printf("sending updates to client %d\n%s\n", id, string(packet))
-		_, err = client.Write(packet)
+		iPlayers, iBlobs := g.getPlayersAndBlobsByInterest(client.interests)
+		updatePacket := updateJson{
+			Players: iPlayers,
+			Blobs:   iBlobs,
+			Unload:  g.updatePlayerClientInterests(id),
+		}
+
+		// packet with all data
+		data, err := json.Marshal(updatePacket)
+		packet := make([]byte, PACKET_METADATA_SIZE+len(data))
+		copy(packet[0:len(data)], data)
+		copy(packet[len(data):], PACKET_STOP)
+
+		//fmt.Printf("sending updates to client %d\n%s\n", id, string(packet))
+		_, err = client.conn.Write(packet)
 		if errors.Is(err, net.ErrClosed) {
 			fmt.Printf("Client %d disconnected\n", id)
 			g.removeClient(id)
@@ -51,6 +60,70 @@ func (g *Game) broadcastUpdates() {
 		if err != nil {
 			fmt.Printf("Failed to send data to client %d\n", id)
 		}
-		fmt.Printf("%d bytes sent to client %d\n", len(packet), id)
 	}
+}
+
+var loadRadius float32 = 1000
+
+func (g *Game) updatePlayerClientInterests(id int) []int {
+	var player *object.Player
+	client, online := g.clients[id]
+	if !online {
+		return nil
+	}
+	pObject, inWorld := g.world.IdMap[id]
+	if !inWorld {
+		return nil
+	}
+
+	player, isPlayer := pObject.(*object.Player)
+	if !isPlayer {
+		return nil
+	}
+
+	unloadIds := make([]int, 0, 8)
+	for _, o := range g.world.IdMap {
+		objectId := o.GetId()
+		if objectId == player.Id {
+			client.interests[objectId] = true
+		}
+
+		objectPos := o.GetPos()
+		dist := player.Position.Sub(&objectPos)
+		load := dist.Len() < loadRadius
+
+		isLoaded := client.interests[objectId]
+		if load {
+			if isLoaded {
+				continue
+			}
+
+			client.interests[objectId] = true
+			continue
+		}
+
+		if isLoaded {
+			client.interests[objectId] = false
+			unloadIds = append(unloadIds, objectId)
+			continue
+		}
+	}
+
+	return unloadIds
+}
+
+func filterObjectsByInterest[T object.GameObject](interests map[int]bool, objects []T) []T {
+	filtered := make([]T, 0, len(objects))
+	for _, object := range objects {
+		if interests[object.GetId()] {
+			filtered = append(filtered, object)
+		}
+	}
+	return filtered
+}
+
+func (g *Game) getPlayersAndBlobsByInterest(interests map[int]bool) ([]*object.Player, []*object.Blob) {
+	p := filterObjectsByInterest[*object.Player](interests, g.world.Players)
+	o := filterObjectsByInterest[*object.Blob](interests, g.world.Blobs)
+	return p, o
 }

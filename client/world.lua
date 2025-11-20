@@ -6,12 +6,17 @@ M = {
 	objects = {}
 }
 
-function M:update(world)
-	self.size = world.size or self.size
+function M:update(data)
+	self.size = data.size or self.size
+	local unloadIds = {}
+	for _, id in ipairs(unloadIds) do
+		print("- unloading game object: " .. id)
+		table.remove(self.objects, id)
+	end
 
 	local count = 0
 	-- load players
-	for _, o in ipairs(world.players or {}) do
+	for _, o in ipairs(data.players or {}) do
 		if self.objects[o.id] then -- update object
 			print("= updating game object [player]: " .. o.id)
 			self.objects[o.id].pos = o.pos
@@ -28,7 +33,7 @@ function M:update(world)
 	end
 
 	-- load blobs
-	for _, o in ipairs(world.blobs or {}) do
+	for _, o in ipairs(data.blobs or {}) do
 		if self.objects[o.id] then -- update object
 			print("= updating game object [blob]: " .. o.id)
 			self.objects[o.id].pos = o.pos

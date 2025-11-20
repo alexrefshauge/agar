@@ -30,6 +30,13 @@ func (v *Vec) Add(other *Vec) *Vec {
 	}
 }
 
+func (v *Vec) Sub(other *Vec) *Vec {
+	return &Vec{
+		X: v.X - other.X,
+		Y: v.Y - other.Y,
+	}
+}
+
 func (v *Vec) Mul(other *Vec) *Vec {
 	return &Vec{
 		X: v.X * other.X,

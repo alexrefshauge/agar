@@ -45,7 +45,10 @@ func (g *Game) handleClientQueue() {
 func (g *Game) addClient(conn net.Conn) int {
 	p := g.world.AddPlayer()
 	id := p.GetId()
-	g.clients[id] = conn
+	g.clients[id] = Client{
+		conn:      conn,
+		interests: make(map[int]bool),
+	}
 	go g.handleClient(id, conn)
 	return id
 }
@@ -58,5 +61,5 @@ func (g *Game) removeClient(id int) {
 	}
 
 	delete(g.clients, id)
-	client.Close()
+	client.conn.Close()
 }

@@ -60,12 +60,4 @@ function love.draw()
 
 	world:draw()
 	camera:clearTransform()
-
-	-- ui
-	yoff = 1
-	for i, o in pairs(world.objects) do
-		love.graphics.print(string.format("%d %s: vel [%.1f; %.1f]", o.id, o.type, o.vel.x, o.vel.y), 100, 100 * yoff, 0, 2,
-			2)
-		yoff = yoff + 1
-	end
 end
