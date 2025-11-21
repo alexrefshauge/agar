@@ -45,7 +45,6 @@ func (g *Game) broadcastUpdates() {
 	}
 
 	if len(updates) == 0 {
-		slog.Debug("no world updates", "tick start", g.tickStart)
 		return
 	}
 

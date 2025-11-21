@@ -12,6 +12,8 @@ import (
 // dt: delta time in seconds
 func (w *World) Step() {
 	w.JustEaten = w.JustEaten[:0]
+	w.handleEatPlayers()
+
 
 	deltaTime := time.Since(w.lastUpdate)
 
@@ -38,9 +40,7 @@ func (w *World) playerCollide(player *object.Player) {
 	if distanceOutside < 0 {
 		return
 	}
-
 	diff := player.Position.Norm().Scale(-1 * distanceOutside)
-
 	player.Position = *player.Position.Add(diff)
 }
 
@@ -54,5 +54,26 @@ func (w *World) handleEat(blob *object.Blob) {
 			w.JustEaten = append(w.JustEaten, blob.GetId())
 			slog.Debug("blog eaten", "blob id", blob.GetId())
 		}
+	}
+}
+
+func (w *World) handleEatPlayers() {
+	toRemove := make([]*object.Player, 0)
+	for i, playerA := range w.Players {
+		for j, playerB := range w.Players {
+			if i == j {
+				continue
+			}
+
+			dist := playerA.Position.DistanceToPoint(&playerB.Position)
+			if dist < float32(playerB.Size) {
+				toRemove = append(toRemove, playerA)
+			}
+		}
+	}
+
+	for _, p := range toRemove {
+		w.JustEaten = append(w.JustEaten, p.GetId())
+		w.Remove(p)
 	}
 }
