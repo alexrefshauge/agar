@@ -26,6 +26,8 @@ func (g *Game) handleClient(id int, conn net.Conn) {
 				break
 			}
 			slog.Error("failed to read from socket", "error", err)
+			g.removeClient(id)
+			return
 		}
 		if prefix {
 			partial = fmt.Sprintf("%s%s", partial, data)
@@ -43,9 +45,9 @@ func (g *Game) handleClient(id int, conn net.Conn) {
 			return
 		}
 
-		switch object := o.(type) {
+		switch obj := o.(type) {
 		case *object.Player:
-			object.Direction = float32(direction)
+			obj.Direction = float32(direction)
 			break
 		default:
 			fmt.Println("GameObject id and client id mismatch. GameObject is not a Player")

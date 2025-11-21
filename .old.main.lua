@@ -13,7 +13,7 @@ local mousePosition = { x = 0, y = 0 }
 
 local direction = 0
 
-function love.load()
+function olove.load()
 	print("starting")
 	world:initialize()
 	client = socket.tcp()
@@ -28,7 +28,7 @@ function love.load()
 end
 
 local lastDirection = 0
-function love.update()
+function olove.update()
 	local ww, wh, flags = love.window.getMode()
 	local mx, my = love.mouse.getPosition()
 	screenCenter = { x = ww / 2, y = wh / 2 }
@@ -57,7 +57,7 @@ function love.update()
 	end
 end
 
-function love.draw()
+function olove.draw()
 	love.graphics.circle("line", 0, 0, world.size)
 	love.graphics.print(status, 300, 100, 0, 5, 5)
 	love.graphics.print(message, 300, 300, 0, 3, 3)

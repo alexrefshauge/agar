@@ -1,11 +1,37 @@
-M = {
+---@class Vec
+---@field x number
+---@field y number
+
+---@class Object
+---@field id integer
+---@field pos Vec
+---@field type "blob" | "player"
+
+---@class Blob : Object
+
+---@class Player : Object
+---@field name string
+---@field size integer
+---@field vel Vec
+---@field dir number
+
+---@class World
+---@field size number
+---@field players table[]
+---@field blobs table[]
+---@field objects table<integer, Object>
+local M = {
 	size = 100,
 	players = {},
 	blobs = {},
 	objects = {}
 }
 
+local inspect = require "inspect"
 local debug = _G.debug
+
+---update world based on UpdateData
+---@param data UpdateData
 function M:update(data)
 	self.size = data.size or self.size
 	local unloadIds = {}
@@ -13,7 +39,7 @@ function M:update(data)
 
 	for _, id in ipairs(unloadIds) do
 		print("- unloading game object: " .. id)
-		table.remove(self.objects, id)
+		-- table.remove(self.objects, id)
 	end
 
 	for _, id in ipairs(eatIds) do
@@ -21,25 +47,22 @@ function M:update(data)
 		table.remove(self.objects, id)
 	end
 
-	local count = 0
 	-- load players
 	for _, o in ipairs(data.players or {}) do
 		if self.objects[o.id] then -- update object
 			if debug then
 				print("= updating game object [player]: " .. o.id)
 			end
-			self.objects[o.id].pos = o.pos
-			self.objects[o.id].dir = o.dir
-			self.objects[o.id].vel = o.vel
-			self.objects[o.id].name = o.name
-			self.objects[o.id].size = o.size
+			table.remove(self.objects, o.id)
+			self.objects[o.id] = o
+			self.objects[o.id].type = "player"
 		else -- load as new object
 			if debug then
 				print("+ loading game object [player]: " .. o.id)
 			end
 			self.objects[o.id] = o
 			self.objects[o.id].type = "player"
-			count = count + 1
+
 		end
 	end
 
@@ -49,20 +72,17 @@ function M:update(data)
 			if debug then
 				print("= updating game object [blob]: " .. o.id)
 			end
-			self.objects[o.id].pos = o.pos
-			self.objects[o.id].size = o.size
+			table.remove(self.objects, o.id)
+			self.objects[o.id] = o
+			self.objects[o.id].type = "blob"
 		else -- load as new object
 			if debug then
 				print("+ loading game object [blob]: " .. o.id)
 			end
 			self.objects[o.id] = o
 			self.objects[o.id].type = "blob"
-			count = count + 1
 		end
 	end
-
-
-	-- print(tostring(count) .. " objects loaded")
 end
 
 function M:step(dt)

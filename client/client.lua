@@ -1,15 +1,27 @@
 local socket = require "socket"
 local json = require "json"
+---@type DataUtils
+local dataUtils = require "data"
 
+---@class Client
+---@field private client table
+---@field private partial string
+---@field connected boolean
+---@field id integer
 local M = {
-	connected = false,
 	client = socket.tcp4(),
-	id = -1,
-	partial = ""
+	partial = "",
+
+	connected = false,
+	id = -1
 }
 
 
-
+---connect to the server
+---@param address string
+---@param port integer
+---@return integer?
+---@return World
 function M:connect(address, port)
 	self.client:settimeout(10)
 	local ok, err = self.client:connect(address, port)
@@ -23,16 +35,15 @@ function M:connect(address, port)
 	if err then
 		print(err)
 	elseif data then
-		print(data)
 		local packet = {}
 		for value in data:gmatch("[^;]+") do
 			table.insert(packet, value)
 		end
 		id = tonumber(packet[1])
 		size = tonumber(packet[2])
-		self.id = id
+		self.id = id or -1
 		print("received id: " .. id)
-		world:update({ size = size })
+		world:update(dataUtils:toUpdateData{ size = size })
 	end
 
 	-- disable blocking
@@ -41,6 +52,9 @@ function M:connect(address, port)
 	return self.id, world
 end
 
+---update world based on incomming socket data
+---@param world World
+---@return World
 function M:updateWorld(world)
 	if not self.connected then
 		return world
@@ -55,7 +69,8 @@ function M:updateWorld(world)
 	if data then
 		data = self.partial .. data
 		self.partial = ""
-		world:update(json.decode(data))
+		local updataData = json.decode(data)
+		world:update(updataData)
 	end
 
 	if part then
@@ -79,7 +94,6 @@ function M:sendInput()
 	if math.abs(lastDirection - direction) > 0.01 then
 		-- client:send(tostring(direction))
 		local _, err = self.client:send(tostring(direction) .. "\n")
-		print(tostring(direction))
 		if err then
 			print("failed to send direction: " .. err)
 		end

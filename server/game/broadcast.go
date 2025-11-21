@@ -17,6 +17,18 @@ type updateJson struct {
 	Eat     []int            `json:"eat"`
 }
 
+func wrap(d updateJson) []byte {
+	data, err := json.Marshal(d)
+	if err != nil {
+		slog.Error("failed to marshal updateJson", "err", err)
+		return []byte{}
+	}
+	packet := make([]byte, PACKET_METADATA_SIZE+len(data))
+	copy(packet[0:len(data)], data)
+	copy(packet[len(data):], PACKET_STOP)
+	return packet
+}
+
 func (g *Game) broadcastUpdates() {
 
 	clients := g.clients
@@ -51,13 +63,10 @@ func (g *Game) broadcastUpdates() {
 		}
 
 		// packet with all data
-		data, err := json.Marshal(updatePacket)
-		packet := make([]byte, PACKET_METADATA_SIZE+len(data))
-		copy(packet[0:len(data)], data)
-		copy(packet[len(data):], PACKET_STOP)
+		packet := wrap(updatePacket)
 
 		//fmt.Printf("sending updates to client %d\n%s\n", id, string(packet))
-		_, err = client.conn.Write(packet)
+		_, err := client.conn.Write(packet)
 		if errors.Is(err, net.ErrClosed) {
 			fmt.Printf("Client %d disconnected\n", id)
 			g.removeClient(id)

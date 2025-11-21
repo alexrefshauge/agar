@@ -16,7 +16,7 @@ var gameWorld *world.World
 
 func init() {
 	gameWorld = world.NewWorld()
-	gameWorld.Generate(100)
+	gameWorld.Generate(1)
 }
 
 func main() {
