@@ -39,12 +39,12 @@ function M:update(data)
 
 	for _, id in ipairs(unloadIds) do
 		print("- unloading game object: " .. id)
-		-- table.remove(self.objects, id)
+		self.objects[id] = nil
 	end
 
 	for _, id in ipairs(eatIds) do
 		print(id .. " has been eaten!")
-		table.remove(self.objects, id)
+		self.objects[id] = nil
 	end
 
 	-- load players
@@ -53,7 +53,7 @@ function M:update(data)
 			if debug then
 				print("= updating game object [player]: " .. o.id)
 			end
-			table.remove(self.objects, o.id)
+			self.objects[o.id] = nil
 			self.objects[o.id] = o
 			self.objects[o.id].type = "player"
 		else -- load as new object
@@ -72,7 +72,7 @@ function M:update(data)
 			if debug then
 				print("= updating game object [blob]: " .. o.id)
 			end
-			table.remove(self.objects, o.id)
+			self.objects[o.id] = nil
 			self.objects[o.id] = o
 			self.objects[o.id].type = "blob"
 		else -- load as new object
