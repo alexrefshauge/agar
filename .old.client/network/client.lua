@@ -1,7 +1,9 @@
-local socket = require "socket"
-local json = require "json"
 ---@type DataUtils
-local dataUtils = require "data"
+local dataUtils = require "network.data"
+
+local socket = require "socket"
+
+local json = require "lib.json"
 
 ---@class Client
 ---@field private client table
@@ -43,7 +45,7 @@ function M:connect(address, port)
 		size = tonumber(packet[2])
 		self.id = id or -1
 		print("received id: " .. id)
-		world:update(dataUtils:toUpdateData{ size = size })
+		world:update(dataUtils:toUpdateData { size = size })
 	end
 
 	-- disable blocking

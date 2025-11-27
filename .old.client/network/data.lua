@@ -13,14 +13,15 @@ local M = {}
 ---@param data table
 ---@return UpdateData
 function M:toUpdateData(data)
-    ---@type UpdateData
-    return {
-        blobs = data.blobs or {},
-        players = data.players or {},
-        unload = data.unload or {},
-        eat = data.eat or {},
-        size = data.size
-    }
+	---@type UpdateData
+	return {
+		blobs = data.blobs or {},
+		players = data.players or {},
+		unload = data.unload or {},
+		eat = data.eat or {},
+		size = data.size
+	}
 end
 
 return M
+

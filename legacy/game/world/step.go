@@ -14,7 +14,6 @@ func (w *World) Step() {
 	w.JustEaten = w.JustEaten[:0]
 	w.handleEatPlayers()
 
-
 	deltaTime := time.Since(w.lastUpdate)
 
 	objects := w.IdMap
@@ -49,7 +48,7 @@ func (w *World) handleEat(blob *object.Blob) {
 		dist := player.Position.DistanceToPoint(&blob.Position)
 		eatDist := float32(player.Size) + float32(blob.Size)
 		if dist < eatDist {
-			player.Size += 1 //blob.Size
+			player.Size += (blob.Size / 10) //blob.Size
 			w.Remove(blob)
 			w.JustEaten = append(w.JustEaten, blob.GetId())
 			slog.Debug("blog eaten", "blob id", blob.GetId())
@@ -61,12 +60,14 @@ func (w *World) handleEatPlayers() {
 	toRemove := make([]*object.Player, 0)
 	for i, playerA := range w.Players {
 		for j, playerB := range w.Players {
+			// Check if player A shoud be eaten by player B
 			if i == j {
 				continue
 			}
 
 			dist := playerA.Position.DistanceToPoint(&playerB.Position)
 			if dist < float32(playerB.Size) {
+				playerB.Size += playerA.Size / 10
 				toRemove = append(toRemove, playerA)
 			}
 		}
