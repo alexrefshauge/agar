@@ -6,6 +6,8 @@ local M = {
 	playerId = -1,
 }
 
+local debug = true
+
 ---connect to game server
 ---@param address string
 function M:connect(address, port)
@@ -25,8 +27,10 @@ local headerSize = 1
 local payloadSize = {
 	welcome = 4 + 4,
 	stateHeader = 4 + 4,
+	deltaStateHeader = 4+4+4,
 	statePlayer = 92,
 	stateBlob = 16,
+	playerName = 16*4
 }
 function M:handleReceive(world)
 	local header, error = self.tcp:receive(headerSize)
@@ -34,7 +38,7 @@ function M:handleReceive(world)
 		local packetType = string.byte(header, 1)
 		if packetType == 1 then self:handleWelcome() end
 		if packetType == 2 then self:handleState(world) end
-		if packetType == 3 then self:handleDeltaState() end
+		if packetType == 3 then self:handleDeltaState(world) end
 	end
 
 	if error and not error == "timeout" then
@@ -45,14 +49,14 @@ function M:handleReceive(world)
 end
 
 function M:handleWelcome()
-	print("received: WELCOME")
+	if debug then print("received: WELCOME") end
 	local payload, error = self.tcp:receive(payloadSize.welcome)
 	if error then print(error) end
 	self.clientId, self.playerId = love.data.unpack(">I4I4", payload)
 end
 
 function M:handleState(world)
-	print("received: STATE")
+	if debug then print("received: STATE") end
 	local header, error = self.tcp:receive(payloadSize.stateHeader)
 	local playerCount, blobCount = love.data.unpack(">I4I4", header)
 	local objects = {}
@@ -60,7 +64,6 @@ function M:handleState(world)
 		if i == playerCount then break end
 		local data, error = self.tcp:receive(payloadSize.statePlayer)
 		local id, size, px, py, vx, vy, dir, name = love.data.unpack(">I4I4fffffc16", data)
-		print(vx, vy, dir)
 		table.insert(objects,
 			{ type = "player", id = id, size = size, pos = { x = px, y = py }, vel = { x = vx, y = vy }, dir = dir, name = name })
 	end
@@ -73,9 +76,39 @@ function M:handleState(world)
 	world:putObjects(objects)
 end
 
-function M:handleDeltaState()
-	print("received: DELTA_STATE")
-	local payload, error = self.tcp:receive(payloadSize.welcome)
+function M:handleDeltaState(world)
+	if debug then print("received: DELTA_STATE") end
+	local header, error = self.tcp:receive(payloadSize.deltaStateHeader)
+	local playerCount, blobCount, unloadCount = love.data.unpack(">I4I4I4", header)
+	local objects, unloadIds = {}, {}
+
+	print(playerCount, blobCount, unloadCount)
+
+	for i = 0, playerCount do
+		if i == playerCount then break end
+		local data, error = self.tcp:receive(payloadSize.statePlayer - payloadSize.playerName)
+		local id, size, px, py, vx, vy, dir, name = love.data.unpack(">I4I4fffff", data)
+		table.insert(objects,
+			{ type = "player", id = id, size = size, pos = { x = px, y = py }, vel = { x = vx, y = vy }, dir = dir, name = name })
+	end
+	for i = 0, blobCount do
+		if i == blobCount then break end
+		local data, error = self.tcp:receive(payloadSize.stateBlob)
+		local id, size, x, y = love.data.unpack(">I4I4ff", data)
+		table.insert(objects, { type = "blob", id = id, size = size, pos = { x = x, y = y } })
+	end
+
+	local unloadData, err = self.tcp:receive(unloadCount*4) -- receive unloadCount x i32
+	print(unloadData)
+	for i = 1, unloadCount do
+		local id = love.data.unpack(">I4", unloadData, i)
+		if id > 0 then
+			table.insert(unloadIds, id)
+		end
+	end
+
+	world:putObjects(objects)
+	world:unload(unloadIds)
 end
 
 function M:flush()

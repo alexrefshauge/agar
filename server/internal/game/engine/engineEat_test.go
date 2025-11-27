@@ -18,7 +18,7 @@ func Test_BotEat(t *testing.T) {
 	_, blobExists := engine.world.GetObjects()[blob.Id()]
 	assert.True(t, blobExists, "blob should exist before step")
 
-	engine.Step(1)
+	engine.Step(1, 0)
 
 	_, blobExists = engine.world.GetObjects()[blob.Id()]
 	assert.False(t, blobExists, "blob should be gone after step")
@@ -36,7 +36,7 @@ func Test_PlayerEat(t *testing.T) {
 	_, ok = engine.world.GetObjects()[p2.Id()]
 	assert.True(t, ok, "player 2 should exist before step")
 
-	engine.Step(1)
+	engine.Step(1, 0)
 
 	_, ok = engine.world.GetObjects()[p1.Id()]
 	assert.True(t, ok, "player 1 should still exist after step")

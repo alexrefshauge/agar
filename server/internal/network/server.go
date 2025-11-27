@@ -59,11 +59,12 @@ func (s *Server) listen() {
 }
 
 func (s *Server) SendTo(clientId int, packet Packet) {
-	slog.Info("sending to client", "client id", clientId)
 	client := s.clients[clientId]
 	n, err := client.tcp.Write(packet.Serialize())
 	if err != nil {
 		slog.Warn("failed to send packet to client", "client id", clientId, "error", err)
+		client.Active = false
+		return
 	}
 	slog.Debug("wrote bytes to client", "client id", clientId, "byte count", n)
 }

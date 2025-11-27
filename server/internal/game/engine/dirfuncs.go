@@ -20,6 +20,9 @@ var botDirFunc object.PlayerDirFunc = func(player *object.Player, world iface.Wo
 			closest = o
 		}
 	}
+	if closest == nil {
+		return player.Dir
+	}
 	return closest.Pos().Sub(player.Pos()).Angle()
 }
 

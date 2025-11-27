@@ -28,8 +28,9 @@ type StatePacket struct {
 type DeltaStatePacket struct {
 	packetImpl
 	Load   []iface.Object
-	Unload []iface.Object
-	Update []iface.Object
+	Unload []int
+	Players []*object.Player
+	Blobs   []*object.Blob
 }
 
 type PlayerInputPacket struct {

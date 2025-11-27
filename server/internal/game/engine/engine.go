@@ -37,7 +37,7 @@ func (e *Engine) Start() {
 
 func (e *Engine) Step(dt float64, tick int) {
 	updates, removals := e.updateObjects(dt)
-	e.Out <- NewOutput(tick, updates, removals)
+	e.Out <- NewOutput(tick, e.world.GetObjects(), removals)
 	slog.Debug("objects updated", "updates", len(updates), "removals", len(removals))
 }
 

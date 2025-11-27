@@ -1,8 +1,6 @@
 package object
 
 import (
-	"fmt"
-
 	"github.com/alexrefshauge/agar/server/internal/game/iface"
 	"github.com/alexrefshauge/agar/server/pkg/vec"
 )
@@ -32,9 +30,8 @@ func NewPlayer(id int, p *vec.Vec2, name string, size int, dirFunc PlayerDirFunc
 
 func (p *Player) Update(dt float64, world iface.World) bool {
 	p.Dir = p.dirFunc(p, world)
-	speed := 10 / float64(p.Size)
+	speed := 100 / float64(p.Size)
 	p.Vel = vec.Vec2FromAngle(p.Dir).MulScalar(speed)
-	fmt.Println(p.Vel)
 	p.pos = p.pos.Add(p.Vel)
 
 	for _, o := range world.GetObjects() {

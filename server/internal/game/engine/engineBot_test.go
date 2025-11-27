@@ -18,7 +18,7 @@ func Test_BotDirFunc(t *testing.T) {
 	blob := object.NewBlob(engine.world.NewId(), vec.NewVec2(1, 1), 1)
 	engine.world.AddObject(blob)
 
-	engine.Step(1)
+	engine.Step(1, 0)
 	expected := math.Pi / 4
 	actual := bot.Dir
 
